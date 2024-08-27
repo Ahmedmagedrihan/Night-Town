@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1">
+    <title>City Exploration Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB; /* Light blue sky */
+        }
+        #loading-screen, #title-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            z-index: 200;
+            transition: opacity 1s;
+        }
+        #loading-screen {
+            background-color: #000;
+        }
+        #title-screen {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        #title-content {
+            text-align: center;
+        }
+        #play-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: green;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+        }
+        #game-container {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+        }
+        #joystick-container, #joystick {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            z-index: 10;
+        }
+        #joystick-container {
+            bottom: 20px;
+            left: 20px;
+            width: 100px;
+            height: 100px;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+        #joystick {
+            width: 50px;
+            height: 50px;
+            left: 25px;
+            top: 25px;
+            position: absolute;
+        }
+        #money-display {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            color: white;
+            z-index: 10;
+        }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin-top: -10px;
+            margin-left: -10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        #interaction-button, #work-button, #stop-working-button, #buy-house-button {
+            display: none;
+            position: absolute;
+            padding: 10px 20px;
+            background-color: white;
+            border: 1px solid black;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 10;
+        }
+        #interaction-button, #buy-house-button {
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        #work-button {
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        #stop-working-button {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: red;
+            color: white;
+            z-index: 101;
+        }
+        #menu {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 200px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            z-index: 10;
+        }
+        #menu-close {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #fire-button {
+            display: none;
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            padding: 10px;
+            background-color: red;
+            color: white;
+            font-size: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+        }
+        #swinging-circle {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: yellow;
+        }
+        #target-outline {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border: 5px solid red;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #click-button {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: green;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            z-index: 101;
+        }
+        #score-display {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: white;
+            z-index: 101;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">Loading...</div>
+    <div id="title-screen">
+        <div id="title-content">
+            <div>City Exploration Game!</div>
+            <button id="play-button">Play</button>
+        </div>
+    </div>
+    <div id="joystick-container">
+        <div id="joystick"></div>
+    </div>
+    <div id="money-display">Money: 0</div>
+    <div id="crosshair"></div>
+    <div id="interaction-button">Open</div>
+    <div id="work-button">Work</div>
+    <div id="stop-working-button">Stop Working</div>
+    <div id="buy-house-button">Buy - 190 Coins</div>
+    <div id="menu">
+        <div id="menu-close">X</div>
+        <p>Welcome to the Shop!</p>
+        <p><button id="buy-gun-button">Buy Gun - 60 Coins</button></p>
+        <p><button id="buy-rifle-button">Buy Rifle - 100 Coins</button></p>
+    </div>
+    <div id="fire-button">Fire</div>
+    <div id="game-container">
+        <div id="target-outline"></div>
+        <div id="swinging-circle"></div>
+        <button id="click-button">Click</button>
+        <div id="score-display">+0 Coins</div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Basic Setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Sky Color
+        scene.background = new THREE.Color(0x87CEEB); // Light blue sky
+
+        // Ambient Light
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft light to brighten all objects
+        scene.add(ambientLight);
+
+        // Sun (Directional Light)
+        const sun = new THREE.DirectionalLight(0xffffff, 0.8); // Weakened directional light to soften shadows
+        sun.position.set(0, 100, 0); // Position the sun at the top center
+        sun.castShadow = true;
+        sun.shadow.mapSize.width = 1024;
+        sun.shadow.mapSize.height = 1024;
+        sun.shadow.camera.near = 0.5;
+        sun.shadow.camera.far = 500;
+        scene.add(sun);
+
+        // Sun visual representation (optional)
+        const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
+        sunMesh.position.copy(sun.position);
+        scene.add(sunMesh);
+
+        // Ground
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(2000, 2000),
+            new THREE.MeshLambertMaterial({ color: 0x32CD32 })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Player Setup
+        const player = new THREE.Object3D();
+        player.position.set(0, 5, 0);
+        scene.add(player);
+
+        // Positioning the camera like in a first-person view
+        camera.position.set(0, 2, 0);
+        player.add(camera);
+
+        // Money System
+        let money = 0;
+        const moneyDisplay = document.getElementById('money-display');
+
+        function updateMoneyDisplay() {
+            moneyDisplay.innerText = `Money: ${money}`;
+        }
+
+        function addMoney(amount) {
+            money += amount;
+            updateMoneyDisplay();
+        }
+
+        function deductMoney(amount) {
+            if (money >= amount) {
+                money -= amount;
+                updateMoneyDisplay();
+                return true;
+            } else {
+                alert("Not enough money!");
+                return false;
+            }
+        }
+
+        // Create a Pizza Shop
+        function createPizzaShop(position) {
+            const shop = new THREE.Group();
+
+            // Walls with a yellow, red, and orange pattern
+            const wallMaterial = new THREE.MeshLambertMaterial({
+                color: 0xFFA500 // Orange
+            });
+            const walls = new THREE.Mesh(
+                new THREE.BoxGeometry(50, 30, 50),
+                wallMaterial
+            );
+            walls.castShadow = true;
+            shop.add(walls);
+
+            const roof = new THREE.Mesh(
+                new THREE.PlaneGeometry(50, 50),
+                new THREE.MeshLambertMaterial({ color: 0xFF4500 }) // Red
+            );
+            roof.rotation.x = Math.PI / 2;
+            roof.position.y = 15;
+            roof.castShadow = true;
+            shop.add(roof);
+
+            // Pizza Texture
+            const pizzaTexture = new THREE.TextureLoader().load('https://i.imgur.com/IKw6Qtz.jpeg');
+            const pizzaSign = new THREE.Mesh(
+                new THREE.CircleGeometry(10, 32),
+                new THREE.MeshBasicMaterial({ map: pizzaTexture })
+            );
+            pizzaSign.position.set(0, 20, 26);
+            shop.add(pizzaSign);
+
+            shop.position.copy(position);
+            scene.add(shop);
+
+            return shop;
+        }
+
+        // Create a House
+        function createHouse(position) {
+            const house = new THREE.Group();
+
+            const walls = new THREE.Mesh(
+                new THREE.BoxGeometry(50, 30, 50),
+                new THREE.MeshLambertMaterial({ color: 0x8B4513 }) // Brown
+            );
+            walls.castShadow = true;
+            house.add(walls);
+
+            const roof = new THREE.Mesh(
+                new THREE.ConeGeometry(35, 20, 4),
+                new THREE.MeshLambertMaterial({ color: 0x8b0000 })
+            );
+            roof.position.y = 25;
+            roof.rotation.y = Math.PI / 4;
+            roof.castShadow = true;
+            house.add(roof);
+
+            house.position.copy(position);
+            scene.add(house);
+
+            return house;
+        }
+
+        // Create a Mosque
+        function createMosque() {
+            const mosque = new THREE.Group();
+
+            // Dome
+            const dome = new THREE.Mesh(
+                new THREE.SphereGeometry(40, 32, 32),
+                new THREE.MeshLambertMaterial({ color: 0xD4AF37 })
+            );
+            dome.position.set(0, 50, 0);
+            dome.castShadow = true;
+            mosque.add(dome);
+
+            // Minaret
+            const minaret = new THREE.Mesh(
+                new THREE.CylinderGeometry(10, 10, 120, 32),
+                new THREE.MeshLambertMaterial({ color: 0xC0C0C0 })
+            );
+            minaret.position.set(-60, 60, 0);
+            minaret.castShadow = true;
+            mosque.add(minaret);
+
+            // Carpet inside the mosque
+            const carpet = new THREE.Mesh(
+                new THREE.PlaneGeometry(80, 120),
+                new THREE.MeshLambertMaterial({
+                    map: new THREE.TextureLoader().load('https://threejsfundamentals.org/threejs/resources/images/flower-1.jpg')
+                })
+            );
+            carpet.rotation.x = -Math.PI / 2;
+            carpet.position.set(0, 0.1, 0);
+            carpet.receiveShadow = true;
+            mosque.add(carpet);
+
+            // Mosque Walls
+            const walls = new THREE.Mesh(
+                new THREE.BoxGeometry(120, 40, 120),
+                new THREE.MeshLambertMaterial({ color: 0x8B4513 })
+            );
+            walls.castShadow = true;
+            mosque.add(walls);
+
+            mosque.position.set(200, 0, 0);
+            scene.add(mosque);
+
+            return mosque;
+        }
+
+        // Initialize Buildings
+        const pizzaShop = createPizzaShop(new THREE.Vector3(150, 0, 50));
+        const house1 = createHouse(new THREE.Vector3(-100, 0, -100));
+        const house2 = createHouse(new THREE.Vector3(-200, 0, -100));
+        const mosque = createMosque();
+
+        // Shop Structure with Non-Transparent Walls
+        const shop = new THREE.Mesh(
+            new THREE.BoxGeometry(100, 50, 100),
+            new THREE.MeshLambertMaterial({ color: 0x8B4513 })
+        );
+        shop.position.set(100, 25, 0);
+        shop.castShadow = true;
+        scene.add(shop);
+
+        // Cashier Dummy
+        const cashier = new THREE.Mesh(
+            new THREE.BoxGeometry(10, 30, 10),
+            new THREE.MeshLambertMaterial({ color: 0xFFD700 })
+        );
+        cashier.position.set(90, 15, 0);
+        cashier.castShadow = true;
+        scene.add(cashier);
+
+        // Gun and Rifle purchase and firing logic
+        let hasGun = false;
+        let hasRifle = false;
+        let canShoot = true;
+        const fireButton = document.getElementById('fire-button');
+        const interactionButton = document.getElementById('interaction-button');
+        const menu = document.getElementById('menu');
+        const menuClose = document.getElementById('menu-close');
+
+        document.getElementById('buy-gun-button').addEventListener('click', () => {
+            if (deductMoney(60)) {
+                hasGun = true;
+                fireButton.style.display = 'block';
+            }
+        });
+
+        document.getElementById('buy-rifle-button').addEventListener('click', () => {
+            if (deductMoney(100)) {
+                hasRifle = true;
+                fireButton.style.display = 'block';
+            }
+        });
+
+        fireButton.addEventListener('click', () => {
+            if (hasGun && canShoot) {
+                shootProjectile('gun');
+            } else if (hasRifle && canShoot) {
+                shootProjectile('rifle');
+            }
+        });
+
+        function shootProjectile(type) {
+            let projectile;
+
+            if (type === 'gun') {
+                // Red spherical projectile
+                projectile = new THREE.Mesh(
+                    new THREE.SphereGeometry(1, 8, 8),
+                    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+                );
+                canShoot = false;
+                setTimeout(() => { canShoot = true; }, 1000); // 1-second cooldown for gun
+            } else if (type === 'rifle') {
+                // Blue line projectile
+                projectile = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.5, 0.5, 10, 8),
+                    new THREE.MeshBasicMaterial({ color: 0x0000ff })
+                );
+                projectile.rotation.x = Math.PI / 2; // Rotate to face forward
+                canShoot = false;
+                setTimeout(() => { canShoot = true; }, 300); // 0.3-second cooldown for rifle
+            }
+
+            projectile.position.copy(player.position);
+            projectile.position.y += 1; // Slightly above ground
+
+            const direction = new THREE.Vector3();
+            camera.getWorldDirection(direction);
+            projectile.velocity = direction.multiplyScalar(50); // Set the velocity
+
+            scene.add(projectile);
+
+            const animateProjectile = () => {
+                projectile.position.add(projectile.velocity.clone().multiplyScalar(1 / 60));
+                if (projectile.position.distanceTo(player.position) > 100) {
+                    scene.remove(projectile);
+                } else {
+                    requestAnimationFrame(animateProjectile);
+                }
+            };
+            animateProjectile();
+        }
+
+        // House Purchase Logic
+        const buyHouseButton = document.getElementById('buy-house-button');
+        let nearHouse = null;
+
+        function checkProximityToHouse() {
+            const houses = [house1, house2];
+            nearHouse = houses.find(house => player.position.distanceTo(house.position) < 50);
+
+            if (nearHouse && !nearHouse.bought) {
+                buyHouseButton.style.display = 'block';
+            } else {
+                buyHouseButton.style.display = 'none';
+            }
+        }
+
+        buyHouseButton.addEventListener('click', () => {
+            if (deductMoney(190)) {
+                nearHouse.bought = true;
+                buyHouseButton.style.display = 'none';
+                alert('House purchased! You can now enter.');
+            }
+        });
+
+        // Shop Interaction Logic
+        let nearCashier = false;
+
+        function checkProximityToCashier() {
+            const distance = player.position.distanceTo(cashier.position);
+            if (distance < 30) {
+                if (!nearCashier) {
+                    nearCashier = true;
+                    interactionButton.style.display = 'block';
+                }
+            } else {
+                if (nearCashier) {
+                    nearCashier = false;
+                    interactionButton.style.display = 'none';
+                    menu.style.display = 'none';  // Ensure menu closes when moving away
+                }
+            }
+        }
+
+        interactionButton.addEventListener('click', () => {
+            menu.style.display = 'block';
+        });
+
+        menuClose.addEventListener('click', () => {
+            menu.style.display = 'none';
+        });
+
+        // Pizza Shop Work Logic (Pendulum Swing Timing Game)
+        const workButton = document.getElementById('work-button');
+        const stopWorkingButton = document.getElementById('stop-working-button');
+        const gameContainer = document.getElementById('game-container');
+        const swingingCircle = document.getElementById('swinging-circle');
+        const targetOutline = document.getElementById('target-outline');
+        const clickButton = document.getElementById('click-button');
+        const scoreDisplay = document.getElementById('score-display');
+
+        let angle = 0;
+        let speed = 0.05; // Speed of the swinging
+        let isWorking = false;
+
+        function startWorkMode() {
+            gameContainer.style.display = 'block';
+            stopWorkingButton.style.display = 'block';
+            isWorking = true;
+
+            function swingCircle() {
+                if (!isWorking) return;
+
+                angle += speed;
+                const x = window.innerWidth / 2 + Math.sin(angle) * 100; // Adjust the swing distance
+                swingingCircle.style.left = `${x}px`;
+
+                requestAnimationFrame(swingCircle);
+            }
+            swingCircle();
+        }
+
+        clickButton.addEventListener('click', () => {
+            const rectCircle = swingingCircle.getBoundingClientRect();
+            const rectOutline = targetOutline.getBoundingClientRect();
+
+            const overlapX = Math.abs(rectCircle.left - rectOutline.left) < 10;
+
+            let earned = 0;
+            if (overlapX) {
+                earned = 3; // Perfect timing
+            } else if (Math.abs(rectCircle.left - rectOutline.left) < 20) {
+                earned = 1; // Close timing
+            }
+
+            addMoney(earned);
+            scoreDisplay.innerText = `+${earned} Coins`;
+            scoreDisplay.style.display = 'block';
+            setTimeout(() => {
+                scoreDisplay.style.display = 'none';
+            }, 1000);
+        });
+
+        stopWorkingButton.addEventListener('click', () => {
+            gameContainer.style.display = 'none';
+            stopWorkingButton.style.display = 'none';
+            isWorking = false;
+        });
+
+        function checkProximityToPizzaShop() {
+            const distance = player.position.distanceTo(pizzaShop.position);
+            if (distance < 30) {
+                workButton.style.display = 'block';
+            } else {
+                workButton.style.display = 'none';
+            }
+        }
+
+        workButton.addEventListener('click', startWorkMode);
+
+        // Joystick Control
+        const joystickContainer = document.getElementById('joystick-container');
+        const joystick = document.getElementById('joystick');
+        let isDraggingJoystick = false, joystickStartX, joystickStartY;
+        let forwardSpeed = 0, sidewaysSpeed = 0;
+        const acceleration = 20;
+        const maxSpeed = 50;
+
+        joystickContainer.addEventListener('touchstart', (e) => {
+            isDraggingJoystick = true;
+            const touch = e.touches[0];
+            joystickStartX = touch.clientX;
+            joystickStartY = touch.clientY;
+        });
+
+        joystickContainer.addEventListener('touchmove', (e) => {
+            if (!isDraggingJoystick) return;
+            const touch = e.touches[0];
+            let deltaX = touch.clientX - joystickStartX;
+            let deltaY = touch.clientY - joystickStartY;
+            const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+            const maxDistance = 40;
+
+            if (distance > maxDistance) {
+                deltaX *= maxDistance / distance;
+                deltaY *= maxDistance / distance;
+            }
+
+            joystick.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+
+            forwardSpeed = deltaY * 1;
+            sidewaysSpeed = deltaX * 1;
+
+            forwardSpeed = Math.min(Math.max(forwardSpeed, -maxSpeed), maxSpeed);
+            sidewaysSpeed = Math.min(Math.max(sidewaysSpeed, -maxSpeed), maxSpeed);
+
+        });
+
+        joystickContainer.addEventListener('touchend', () => {
+            isDraggingJoystick = false;
+            joystick.style.transform = 'translate(0, 0)';
+            forwardSpeed = 0;
+            sidewaysSpeed = 0;
+        });
+
+        // Camera Control
+        let isDraggingCamera = false, prevTouchX, prevTouchY;
+
+        renderer.domElement.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            isDraggingCamera = true;
+            prevTouchX = touch.clientX;
+            prevTouchY = touch.clientY;
+        });
+
+        renderer.domElement.addEventListener('touchmove', (e) => {
+            if (!isDraggingCamera) return;
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - prevTouchX;
+            const deltaY = touch.clientY - prevTouchY;
+
+            player.rotation.y -= deltaX * 0.01;
+
+            camera.rotation.x -= deltaY * 0.01;
+            camera.rotation.x = Math.max(Math.min(camera.rotation.x, Math.PI / 4), -Math.PI / 4);
+
+            prevTouchX = touch.clientX;
+            prevTouchY = touch.clientY;
+        });
+
+        renderer.domElement.addEventListener('touchend', () => {
+            isDraggingCamera = false;
+        });
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const deltaTime = 1 / 60;
+            player.translateZ(forwardSpeed * deltaTime);
+            player.translateX(sidewaysSpeed * deltaTime);
+
+            checkProximityToCashier();
+            checkProximityToPizzaShop();
+            checkProximityToHouse();
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Loading and Title Screen Handling
+        function showTitleScreen() {
+            document.getElementById('loading-screen').style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('title-screen').style.display = 'flex';
+            }, 1000);
+        }
+
+        function startGame() {
+            document.getElementById('title-screen').style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('title-screen').style.display = 'none';
+                document.getElementById('joystick-container').style.display = 'block';
+                document.getElementById('money-display').style.display = 'block';
+                document.getElementById('crosshair').style.display = 'block';
+            }, 1000);
+        }
+
+        window.addEventListener('load', () => {
+            showTitleScreen();
+        });
+
+        document.getElementById('play-button').addEventListener('click', startGame);
+
+        // Resize Event
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
